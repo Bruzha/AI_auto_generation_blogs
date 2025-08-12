@@ -1,0 +1,244 @@
+import { getTuesdaysAndFridaysForNextMonth } from "./dateUtils";
+import { exampleContentPlan, topics } from "./ArticleTemplate";
+import { getContentPlanPrompt } from "@/prompts/contentPlanPrompt";
+import fetchContentPlan from "../../store/thunks/fetchContentPlan";
+import { getArticlePrompt } from "@/prompts/articlePrompt";
+import fetchArticleContent from "../../store/thunks/fetchArticleContent";
+import generateImagesForArticle from "../../store/thunks/generateImagesForArticle";
+import { client } from "../sanity/client";
+import { LoadingStage } from "@/app/componets/ui/loadingIndicator/LoadingIndicator";
+import { AppDispatch } from "../../store";
+import { addPost } from "../../store/reducers/postsSlice";
+
+// export async function generateContentPlan(
+//   posts: any[],
+//   setPosts: any,
+//   setLoading: (val: boolean) => void,
+//   setLoadingStage: (stage: LoadingStage) => void,
+// ) {
+//   setLoading(true);
+//   setLoadingStage('content-plan');
+
+//   const newGeneratedPosts: any[] = [];
+
+//   const existingTitles = posts.map(post => post.title);
+//   const articleDates = getTuesdaysAndFridaysForNextMonth();
+
+//   // 1. Генерация тем
+//   const topicsForArticles = Array.from({ length: articleDates.length }, () => {
+//     return topics[Math.floor(Math.random() * topics.length)];
+//   });
+
+//   // 2. Генерация плана контента
+//   const combinedPromptContentPlan = getContentPlanPrompt(
+//     topicsForArticles,
+//     existingTitles,
+//     exampleContentPlan,
+//     articleDates
+//   );
+
+//   const combinedContentPlan = await fetchContentPlan(combinedPromptContentPlan);
+//   console.log('combinedContentPlan: ', combinedContentPlan);
+
+//   if (!combinedContentPlan || !Array.isArray(combinedContentPlan)) {
+//     console.error('❌ Failed to fetch combined content plan or result is not an array');
+//     setLoading(false);
+//     setLoadingStage('done');
+//     return;
+//   }
+//   setLoadingStage('article-generation');
+
+//   const articlePromises = [];
+
+// //   for (let i = 0; i < combinedContentPlan.length; i++) {
+//     for (let i = 0; i < 1; i++) {
+//     const contentPlan = combinedContentPlan[i];
+//     const date = articleDates[i].toLocaleDateString('en-CA', {
+//       year: 'numeric',
+//       month: '2-digit',
+//       day: '2-digit',
+//     }).replace(/\//g, '-');
+
+//     if (!contentPlan) {
+//       console.warn(`❌ No content plan found for topic ${topicsForArticles[i]} and date ${date}`);
+//       continue;
+//     }
+
+//     const generateArticle = async () => {
+//       try {
+//         const promptArticle = getArticlePrompt(
+//           contentPlan.title,
+//           contentPlan.keywords,
+//           topicsForArticles[i]
+//         );
+//         const bodyContent = await fetchArticleContent(promptArticle);
+//         if (!bodyContent) return null;
+
+//         setLoadingStage('image-generation');
+
+//         const { modifiedBodyContent } = await generateImagesForArticle(bodyContent);
+
+//         const newPost = {
+//           _type: 'post',
+//           title: contentPlan.title,
+//           slug: {
+//             _type: 'slug',
+//             current: contentPlan.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, ''),
+//           },
+//           publishedAt: date,
+//           body: modifiedBodyContent,
+//           //image: null,
+//           status: 'Unpublished',
+//         };
+
+//         const createdDoc = await client.create({
+//           ...newPost,
+//           _id: `drafts.${newPost.slug.current}`,
+//         });
+
+//         return {
+//           ...createdDoc,
+//           body: modifiedBodyContent,
+//         };
+//       } catch (error) {
+//         console.error('❌ Ошибка при генерации статьи:', error);
+//         return null;
+//       } finally {
+//         setLoadingStage('article-generation'); // возвращаемся к генерации статей
+//       }
+//     };
+
+//     articlePromises.push(generateArticle());
+//   }
+
+//   const settledArticles = await Promise.allSettled(articlePromises);
+
+//   for (const result of settledArticles) {
+//     if (result.status === 'fulfilled' && result.value) {
+//       newGeneratedPosts.push(result.value);
+//     } else if (result.status === 'rejected') {
+//       console.error('❌ Ошибка при генерации статьи:', result.reason);
+//     }
+//   }
+
+//   newGeneratedPosts.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+//   setPosts(prev => {
+//     const combined = [...prev, ...newGeneratedPosts];
+//     return combined.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+//   });
+
+//   setLoading(false);
+//   setLoadingStage('done');
+// }
+
+export async function generateContentPlan(
+  posts: any[],
+  dispatch: AppDispatch,
+  setLoading: (val: boolean) => void,
+  setLoadingStage: (stage: LoadingStage) => void,
+) {
+  setLoading(true);
+  setLoadingStage('content-plan');
+
+  const existingTitles = posts.map(post => post.title);
+  const articleDates = getTuesdaysAndFridaysForNextMonth();
+
+  const topicsForArticles = Array.from({ length: articleDates.length }, () => {
+    return topics[Math.floor(Math.random() * topics.length)];
+  });
+
+  const combinedPromptContentPlan = getContentPlanPrompt(
+    topicsForArticles,
+    existingTitles,
+    exampleContentPlan,
+    articleDates
+  );
+
+  const combinedContentPlan = await fetchContentPlan(combinedPromptContentPlan);
+  console.log('combinedContentPlan: ', combinedContentPlan);
+
+  if (!combinedContentPlan || !Array.isArray(combinedContentPlan)) {
+    console.error('❌ Failed to fetch combined content plan or result is not an array');
+    setLoading(false);
+    setLoadingStage('done');
+    return;
+  }
+
+  setLoadingStage('article-generation');
+
+  const articlePromises = [];
+
+  // for (let i = 0; i < combinedContentPlan.length; i++) {
+  for (let i = 0; i < 1; i++) {
+    const contentPlan = combinedContentPlan[i];
+    const date = articleDates[i].toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).replace(/\//g, '-');
+
+    if (!contentPlan) {
+      console.warn(`❌ No content plan found for topic ${topicsForArticles[i]} and date ${date}`);
+      continue;
+    }
+
+    const generateArticle = async () => {
+      try {
+        const promptArticle = getArticlePrompt(
+          contentPlan.title,
+          contentPlan.keywords,
+          topicsForArticles[i]
+        );
+        const bodyContent = await fetchArticleContent(promptArticle);
+        if (!bodyContent) return null;
+
+        setLoadingStage('image-generation');
+
+        const { modifiedBodyContent } = await generateImagesForArticle(bodyContent);
+
+        const newPost = {
+          _type: 'post',
+          title: contentPlan.title,
+          slug: {
+            _type: 'slug',
+            current: contentPlan.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-*|-*$/g, ''),
+          },
+          publishedAt: date,
+          body: modifiedBodyContent,
+          image: null,
+          status: 'Unpublished',
+        };
+
+        const createdDoc = await client.create({
+          ...newPost,
+          _id: `drafts.${newPost.slug.current}`,
+        });
+
+        const postToStore = {
+          ...createdDoc,
+          body: modifiedBodyContent,
+        };
+
+        dispatch(addPost(postToStore));
+
+        return postToStore;
+      } catch (error) {
+        console.error('❌ Error while generating article:', error);
+        return null;
+      } finally {
+        setLoadingStage('article-generation');
+      }
+    };
+
+    articlePromises.push(generateArticle());
+  }
+
+  await Promise.allSettled(articlePromises);
+
+  setLoading(false);
+  setLoadingStage('done');
+}

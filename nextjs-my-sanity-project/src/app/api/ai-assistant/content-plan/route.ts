@@ -3,56 +3,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openai } from '../Assistant';
 
-// export async function POST(req: NextRequest) {
-//   try {
-//     const { prompt } = await req.json();
-//     const assistantId = process.env.CROCODE_ASSISTANT_ID || null;
-//     console.log("prompt: ", prompt);
-//     if (!prompt || !assistantId) {
-//       return NextResponse.json({ error: "Prompt or assistantId missing" }, { status: 400 });
-//     }
-
-//     const thread = await openai.beta.threads.create();
-//     await openai.beta.threads.messages.create(thread.id, { role: "user", content: prompt });
-
-//     const run = await openai.beta.threads.runs.create(thread.id, { assistant_id: assistantId });
-
-//     const timeoutMs = 60000;
-//     const startTime = Date.now();
-//     let runStatus = await openai.beta.threads.runs.retrieve(run.id, { thread_id: thread.id });
-//     console.log("runStatus: ", runStatus);
-//     while (runStatus.status !== "completed" && Date.now() - startTime < timeoutMs) {
-//       await new Promise((resolve) => setTimeout(resolve, 1000));
-//       runStatus = await openai.beta.threads.runs.retrieve(run.id, { thread_id: thread.id });
-
-//       if (["failed", "cancelled", "expired"].includes(runStatus.status)) {
-//         return NextResponse.json({ error: `Run failed: ${runStatus.status}` }, { status: 500 });
-//       }
-//     }
-
-//     const messages = await openai.beta.threads.messages.list(thread.id);
-// console.log("messages: ", messages);
-//     const assistantMessages = messages.data.filter((m) => m.role === "assistant");
-// console.log("assistantMessages: ", assistantMessages);
-//     let text = "";
-//     for (const msg of assistantMessages) {
-//       for (const content of msg.content) {
-//         if (content.type === "text") {
-//           text += content.text.value + "\n";
-//         }
-//       }
-//     }
-//     console.log("text: ", text);
-
-//     return NextResponse.json({ result: { text: text.trim() } });
-//   } catch (error: any) {
-//     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
-//   }
-// }
-
-// api/ai-assistant/routes/content-plan
-
-
 export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json();

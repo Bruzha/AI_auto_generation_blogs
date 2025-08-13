@@ -60,8 +60,8 @@ async function fetchAndOptimizeImage(imageUrl: string): Promise<string | null> {
         withoutEnlargement: true,
       })
       .webp({
-        quality: 80,
-        alphaQuality: metadata.hasAlpha ? 80 : undefined,
+        quality: 60,
+        alphaQuality: metadata.hasAlpha ? 60 : undefined,
       })
       .toBuffer();
 

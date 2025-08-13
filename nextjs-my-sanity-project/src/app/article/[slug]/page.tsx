@@ -1,68 +1,15 @@
-'use client';
+import ArticleClient from './ArticleClient';
 
-import { PostType } from '@/app/componets/ui/postTable/PostTable';
-import { client } from '@/sanity/client';
-import { notFound } from 'next/navigation';
-import { format } from 'date-fns';
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import './style.scss';
-import LoadingIndicator from '@/app/componets/ui/loadingIndicator/LoadingIndicator';
-
-interface Props {
+interface PageProps {
   params: {
     slug: string;
   };
 }
 
-export default function ArticlePage({ params }: Props) {
-  const { slug } = params;
-  const [post, setPost] = useState<PostType | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchPostFromSanity() {
-      try {
-        const query = `*[_type == "post" && slug.current == $slug][0]`;
-        const fetchedPost = await client.fetch(query, { slug });
-
-        if (fetchedPost) {
-          setPost(fetchedPost);
-        } else {
-          notFound();
-        }
-      } catch (error) {
-        console.error("❌ Error loading article from Sanity:", error);
-        notFound();
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPostFromSanity();
-  }, [slug]);
-
-  if (loading) {
-    return <LoadingIndicator stage={'initial-article'}></LoadingIndicator>;
-  }
-
-  if (!post) {
-    return notFound();
-  }
-
-  return (
-    <div className="article">
-      <Link href="/" className="article__backLink">
-        Back
-      </Link>
-      <h1 className="article__title">{post.title}</h1>
-      <p className="article__publishedDate">
-        Published: {format(new Date(post.publishedAt), 'dd.MM.yyyy')}
-      </p>
-      <div dangerouslySetInnerHTML={{ __html: post.body || '' }} />
-    </div>
-  );
+export default function ArticlePage({ params }: PageProps) {
+  return <ArticleClient slug={params.slug} />;
 }
+
 
 // 'use client';
 

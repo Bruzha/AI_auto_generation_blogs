@@ -1,3 +1,4 @@
+//app/article/[slug]/page.tsx
 import ArticleClient from './ArticleClient';
 
 interface PageProps {

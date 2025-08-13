@@ -1,15 +1,24 @@
-//app/article/[slug]/page.tsx
+//src/app/article/[slug]/page.tsx
 import ArticleClient from './ArticleClient';
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
-export default function ArticlePage({ params }: PageProps) {
-  return <ArticleClient slug={params.slug} />;
+
+export default async function ArticlePage({ params }: PageProps) {
+  const { slug } = await params;
+
+  return <ArticleClient slug={slug} />;
 }
+
+
+
 
 
 // 'use client';

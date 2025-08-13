@@ -1,8 +1,8 @@
+//src/app/article/[slug]/ArticleClient.tsx
 'use client';
 
 import { PostType } from '@/app/componets/ui/postTable/PostTable';
 import { client } from '@/sanity/client';
-import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -26,11 +26,10 @@ export default function ArticleClient({ slug }: Props) {
         if (fetchedPost) {
           setPost(fetchedPost);
         } else {
-          notFound();
+          console.error("❌ Error loading article from Sanity");
         }
       } catch (error) {
         console.error("❌ Error loading article from Sanity:", error);
-        notFound();
       } finally {
         setLoading(false);
       }
@@ -44,7 +43,7 @@ export default function ArticleClient({ slug }: Props) {
   }
 
   if (!post) {
-    return null; // fallback если notFound не сработал
+    return null;
   }
 
   return (

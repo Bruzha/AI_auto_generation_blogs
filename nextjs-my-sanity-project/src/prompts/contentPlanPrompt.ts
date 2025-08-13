@@ -27,6 +27,7 @@
 // \`\`\`
 // `;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getContentPlanPrompt = (topics: string[], existingTitles: string[], exampleContentPlan: string, articleDates: any) => `
 You are a blog post title and keyword generator for the CROCODE Lab blog's content plan for the next month.
 

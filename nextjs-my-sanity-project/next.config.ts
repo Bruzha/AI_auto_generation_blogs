@@ -6,14 +6,14 @@
 
 // export default nextConfig;
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   experimental: {
-    serverActions: true, // если используешь server actions
+    serverActions: {},
   },
-  output: 'standalone', // Важно для Netlify и других хостингов
 };
 
 export default nextConfig;
+

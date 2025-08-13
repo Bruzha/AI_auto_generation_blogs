@@ -123,6 +123,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ result: { text: text.trim() } });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }

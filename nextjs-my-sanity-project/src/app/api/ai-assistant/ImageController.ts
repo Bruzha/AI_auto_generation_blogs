@@ -23,6 +23,7 @@ export default async function generateImage(prompt: string): Promise<string | nu
     }
     const optimizedBase64 = await fetchAndOptimizeImage(imageUrl);
     return optimizedBase64;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error generating image:", error);
     if (error.response) {
@@ -34,8 +35,14 @@ export default async function generateImage(prompt: string): Promise<string | nu
 
 async function fetchAndOptimizeImage(imageUrl: string): Promise<string | null> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 секунд
+
     const response = await fetch(imageUrl, {
-  timeout: 20000,});
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
@@ -60,8 +67,45 @@ async function fetchAndOptimizeImage(imageUrl: string): Promise<string | null> {
 
     const base64String = webpBuffer.toString('base64');
     return `data:image/webp;base64,${base64String}`;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error optimizing image:", error);
     return null;
   }
 }
+
+
+// async function fetchAndOptimizeImage(imageUrl: string): Promise<string | null> {
+//   try {
+//     const response = await fetch(imageUrl, {
+//   timeout: 20000,});
+//     if (!response.ok) {
+//       throw new Error(`Failed to fetch image: ${response.statusText}`);
+//     }
+
+//     const arrayBuffer = await response.arrayBuffer();
+//     const buffer = Buffer.from(arrayBuffer);
+
+//     const image = sharp(buffer);
+//     const metadata = await image.metadata();
+
+//     const webpBuffer = await image
+//       .resize({
+//         width: 1024,
+//         fit: sharp.fit.inside,
+//         withoutEnlargement: true,
+//       })
+//       .webp({
+//         quality: 80,
+//         alphaQuality: metadata.hasAlpha ? 80 : undefined,
+//       })
+//       .toBuffer();
+
+//     const base64String = webpBuffer.toString('base64');
+//     return `data:image/webp;base64,${base64String}`;
+//       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (error: any) {
+//     console.error("Error optimizing image:", error);
+//     return null;
+//   }
+// }
